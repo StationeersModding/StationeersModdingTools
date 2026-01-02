@@ -11,6 +11,6 @@ other Mod loader to have access to the different game classes.
 
 - Open Unity Package Manager.
 - Click on the + sign and select Add Package from Git URL
-- paste the project Git URL (https://github.com/ilodev/StationeersModdingTools.git)
-
+- Paste the project Git URL (https://github.com/StationeersModding/StationeersModdingTools.git) // Originally Created by ilodev
+- In Unity click on Tools -> Install required packages
 
