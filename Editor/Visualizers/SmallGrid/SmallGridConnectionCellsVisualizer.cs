@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using Assets.Scripts.Objects;
 
-namespace ilodev.stationeersmods.tools.visualizers
+namespace StationeersModding.tools.visualizers
 {
     /// <summary>
     /// Highlights the SmallGrid Cells occupied by the OpenEnd connections

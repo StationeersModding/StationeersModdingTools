@@ -4,7 +4,7 @@ using ilodev.stationeersmods.tools.assetsfactory;
 using UnityEditor;
 using UnityEngine;
 
-namespace ilodev.stationeersmods.tools.contextualtools
+namespace StationeersModding.tools.contextualtools
 {
     public class ContextMenuStackableSplit : Editor
     {

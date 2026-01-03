@@ -8,7 +8,7 @@ using Assets.Scripts.Objects;
 using Effects;
 using System;
 
-namespace ilodev.stationeersmods.tools.uihelpers
+namespace StationeersModding.tools.uihelpers
 {
 
     [CustomEditor(typeof(SwitchOnOff), true)] 

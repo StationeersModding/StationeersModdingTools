@@ -2,7 +2,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace ilodev.stationeersmods.tools.assetsfactory
+namespace StationeersModding.tools.assetsfactory
 {
     public static class FileUtils 
     {

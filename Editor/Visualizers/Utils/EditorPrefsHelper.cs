@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace ilodev.stationeersmods.tools.visualizers
+namespace StationeersModding.tools.visualizers
 {
     /// <summary>
     /// Helper class to support custom Editor Preferences

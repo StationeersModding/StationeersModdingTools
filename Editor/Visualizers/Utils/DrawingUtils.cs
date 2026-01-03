@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace ilodev.stationeersmods.tools.visualizers
+namespace StationeersModding.tools.visualizers
 {
     public static class DrawingUtils 
     {

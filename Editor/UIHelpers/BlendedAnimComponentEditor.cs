@@ -4,7 +4,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace ilodev.stationeersmods.tools.uihelpers
+namespace StationeersModding.tools.uihelpers
 {
 
     [CustomEditor(typeof(BlendedAnimComponent), true)] 

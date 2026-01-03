@@ -4,7 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace ilodev.stationeersmods.tools.assetsfactory
+namespace StationeersModding.tools.assetsfactory
 {
     // TODO: I need to centralize this creation into a custom util
 

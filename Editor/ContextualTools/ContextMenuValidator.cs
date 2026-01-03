@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ilodev.stationeersmods.tools.contextualtools
+namespace StationeersModding.tools.contextualtools
 {
     /// <summary>
     /// General validation class for contextual menus

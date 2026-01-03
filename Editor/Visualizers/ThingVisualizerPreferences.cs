@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace ilodev.stationeersmods.tools.visualizers
+namespace StationeersModding.tools.visualizers
 {
     /// <summary>
     /// Initial version of Modding Tools Preferences
