@@ -15,5 +15,5 @@ Requires the game assemblies which is handled by the Unity Template for now
 
 - Open Unity Package Manager.
 - Click on the + sign and select Add Package from Git URL
-- Paste the project Git URL (https://github.com/StationeersModding./StationeersModding.git) // Originally Created by ilodev
+- Paste the project Git URL (https://github.com/StationeersModding/StationeersModding.git) // Originally Created by ilodev
 - In Unity click on Tools -> Install required packages
