@@ -3,7 +3,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace StationeersModding.tools.uihelpers
+namespace ilodev.stationeersmods.tools.uihelpers
 {
 
     [CustomEditor(typeof(ActivateButton), true)] 

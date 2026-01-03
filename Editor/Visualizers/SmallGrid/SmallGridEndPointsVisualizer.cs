@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace StationeersModding.tools.visualizers
+namespace ilodev.stationeersmods.tools.visualizers
 {
     /// <summary>
     /// Class to visualize OpenEnd connections

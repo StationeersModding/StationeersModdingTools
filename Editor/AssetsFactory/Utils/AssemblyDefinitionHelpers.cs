@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using UnityEngine;
 
-namespace StationeersModding.tools.assetsfactory
+namespace ilodev.stationeersmods.tools.assetsfactory
 {
     public static class AssemblyDefinitionHelpers 
     {

@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace StationeersModding.tools.visualizers
+namespace ilodev.stationeersmods.tools.visualizers
 {
     public class StructureGridBoundsVisualizer : IThingVisualizer
     {

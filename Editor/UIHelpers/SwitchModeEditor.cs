@@ -9,7 +9,7 @@ using Effects;
 using System;
 using Reagents;
 
-namespace StationeersModding.tools.uihelpers
+namespace ilodev.stationeersmods.tools.uihelpers
 {
 
     [CustomEditor(typeof(SwitchMode), true)] 

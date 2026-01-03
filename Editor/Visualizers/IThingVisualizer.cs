@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace StationeersModding.tools.visualizers
+namespace ilodev.stationeersmods.tools.visualizers
 { 
     /// <summary>
     /// Interface for all types of visual editors

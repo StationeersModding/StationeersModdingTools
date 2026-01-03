@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEditor.Overlays;
 using UnityEngine.UIElements;
 
-namespace StationeersModding.tools.visualizers
+namespace ilodev.stationeersmods.tools.visualizers
 {
     /// <summary>
     /// Creates an overlay panel for the visualizers

@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using System.Drawing;
 
-namespace StationeersModding.tools.visualizers
+namespace ilodev.stationeersmods.tools.visualizers
 {
   public class ThingInteractableVisualizer : IThingVisualizer
   {
