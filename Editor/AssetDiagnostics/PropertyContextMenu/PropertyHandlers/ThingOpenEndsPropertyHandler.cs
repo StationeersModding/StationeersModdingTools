@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
-using static RootMotion.Demos.Turret;
 
 namespace ilodev.stationeersmodding.tools.diagnostics
 {

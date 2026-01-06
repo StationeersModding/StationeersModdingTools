@@ -6,7 +6,6 @@ using System.Text;
 using System.Xml.Linq;
 using UnityEditor;
 using UnityEngine;
-using static RootMotion.Demos.Turret;
 
 namespace ilodev.stationeers.moddingtools.diagnostics
 {
