@@ -4,116 +4,106 @@
 
 AssetsFactory is a Unity Editor-only helper for creating Stationeers mod assets. A menu item should:
 
-1. Generate a minimal component script under `Assets/Scripts/`.
+1. Generate a minimal runtime component script under `Assets/Scripts/` when the component class is missing.
 2. Let Unity compile that script.
-3. After compilation/domain reload, create a configured `GameObject`.
-4. Attach mesh components, the generated Stationeers component, and the default stackable interactables.
-5. Select the new object so the user can continue editing it.
+3. After compilation/domain reload, resolve the generated component type.
+4. Create a configured `GameObject`.
+5. Let the specific asset constructor perform its own setup.
+6. Select the new object so the user can continue editing it.
 
-The idea is that these assets are not just an empty script, but mostly functional items, e.g. including pre-defined interactables, slots, etc.
+## Current design
 
-### `StationeersAssetDefinition`
+Each asset creation menu item is its own constructor class.
 
-A data-only description of an asset type:
+For example:
 
-- definition id
-- menu name
-- default object name
+- `CreateConstructor`
+- `CreateMultiConstructor`
+- `CreateDynamicThingConstructor`
+- `CreateFrame`
+- `CreateWall`
+
+Each class defines:
+
 - generated class name
 - Stationeers base class
-- `AddComponentMenu` path
 - generated script path
-- whether default stackable interactables are added
+- Add Component menu path
+- default GameObject name
+- asset-specific setup code
 
-Add new supported assets by registering another definition in `StationeersAssetDefinitions` and adding a small menu wrapper, or optionally move this to its own class.
+## Shared factory responsibility
 
-### `StationeersAssetFactory`
-
-The shared workflow:
+`StationeersAssetFactory` only owns the shared workflow:
 
 1. Discover the current asmdef root namespace and assembly name.
-2. Generate the minimal script.
-3. Save one pending request to `EditorPrefs`.
-4. Subscribe to `EditorApplication.update`.
-5. After Unity finishes compiling/updating, resolve the generated component type.
-6. Create and configure the `GameObject`.
-7. Clear the pending request only after successful creation.
+2. Save a pending request containing the asset constructor type.
+3. Check whether the generated component already exists.
+4. Generate the missing script if needed.
+5. Wait for Unity to finish compiling/updating.
+6. Recreate the asset constructor after domain reload.
+7. Resolve the generated component type.
+8. Create a GameObject and delegate setup to the asset constructor.
 
-If the generated type is not available yet, the pending request is kept instead of failing. This makes the workflow more tolerant of Unity compilation timing.
+The factory should not know which assets need interactables, slots, custom render setup, or other special behavior.
 
-### `StationeersTypeResolver`
+## Asset constructor responsibility
 
-Resolves the generated component type using multiple strategies:
+Each asset constructor inherits from `StationeersAssetConstructorBase` and overrides metadata properties.
 
-1. Preferred assembly-qualified name from the asmdef.
-2. Unqualified type name.
-3. Scan loaded assemblies for the full type name.
-
-It also verifies that the resolved type is a valid Unity `Component` before it can be attached.
-
-### Menu wrappers
-
-`CreateConstructor`, `CreateMultiConstructor`, and `CreateDynamicThingConstructor` are tiny wrappers that call the shared factory.
-
-### `InteractableHelpers`
-
-Now returns `bool` and handles null targets safely. This prevents a missing or unresolved generated component from turning into a hard null-reference failure.
-
-## Files changed or added
-
-- `CreateConstructor.cs`: menu wrapper.
-- `CreateMultiConstructor.cs`: menu wrapper.
-- `CreateDynamicThingConstructor.cs`: menu wrapper.
-- `Core/StationeersAssetDefinition.cs`: central registry and asset descriptions.
-- `Core/StationeersAssetFactory.cs`: shared creation workflow.
-- `Core/StationeersTypeResolver.cs`: component type resolution.
-- `Interactables/InteractableHelpers.cs`: safe interactable creation.
-- `Utils/FileUtils.cs`: script generation and import behavior.
-
-## How to add a new asset type
-
-1. Add a new `StationeersAssetDefinition` in `StationeersAssetDefinitions`.
-2. Add a menu wrapper class with a `[MenuItem]` attribute.
-3. Call `StationeersAssetFactory.CreateAsset(StationeersAssetDefinitions.YourDefinition)`.
-
-Example:
+A simple asset can rely on the base setup:
 
 ```csharp
-public static readonly StationeersAssetDefinition Example = new StationeersAssetDefinition(
-    "Example",
-    "Assets/Create/Stationeers/Examples/Example", // Not used for now
-    "NewExampleAsset",
-    "Example",
-    "Assets.Scripts.Objects.ExampleBase",
-    "Stationeers/Examples/Example",
-    CreatedScriptsPath + "Example.cs");
-```
-
-```csharp
-[MenuItem("Assets/Create/Stationeers/Examples/Example", false, 1)]
-public static void CreateExampleAsset()
+public sealed class CreateWall : StationeersAssetConstructorBase
 {
-    StationeersAssetFactory.CreateAsset(StationeersAssetDefinitions.Example);
+    public override string Id => "Wall";
+    public override string DefaultGameObjectName => "NewStructureWallAsset";
+    public override string GeneratedClassName => "Wall";
+    public override string BaseClassName => "Assets.Scripts.Objects.Wall";
+    public override string AddComponentMenuPath => "Stationeers/Objects/Wall";
+    public override string ScriptPath => "Assets/Scripts/Objects/Wall.cs";
 }
 ```
 
-## Reliability notes
+An asset that needs special setup overrides `ConfigureGameObject`:
 
-- The pending creation request survives Unity domain reload through `EditorPrefs`.
-- The editor update callback is de-duplicated before it is added.
-- The pending request is only cleared after the generated type is found and the object is created.
-- If the generated component does not derive from `Component`, it is rejected.
-- Default interactables are only added when the final object actually has a `Thing` component.
+```csharp
+public override void ConfigureGameObject(GameObject gameObject, Type generatedType)
+{
+    base.ConfigureGameObject(gameObject, generatedType);
 
-## Manual test checklist (until it is moved to proper testing)
+    Thing thing = gameObject.GetComponent<Thing>();
+    InteractableHelpers.AddInteractable(thing, "SplitOne", InteractableType.Button1);
+    InteractableHelpers.AddInteractable(thing, "SplitHalf", InteractableType.Button2);
+}
+```
+
+
+## Utility classes
+
+- `FileUtils` handles script file creation, folder creation, line endings, and AssetDatabase refresh/import.
+- `AssemblyDefinitionHelpers` finds the asmdef root namespace and assembly name.
+- `StationeersTypeResolver` resolves generated component types after compile/domain reload.
+- `TypeUtils` checks whether a fully-qualified component type already exists.
+- `InteractableHelpers` adds Stationeers interactables safely.
+
+
+## How to add a new asset type
+
+1. Create a new class inheriting from `StationeersAssetConstructorBase`.
+2. Add a `[MenuItem]` method that calls `StationeersAssetFactory.CreateAsset(new YourClass())`.
+3. Override the metadata properties.
+4. Override `ConfigureGameObject` only if the asset needs custom setup.
+
+## Manual test checklist
 
 1. Import the tool into a Unity project with Stationeers assemblies available.
-2. Use `Assets/Create/Stationeers/QuickItems/Constructor`.
-3. Confirm `Assets/Scripts/Objects/Constructor.cs` is generated.
+2. Use each menu item under `Assets/Create/Stationeers/QuickItems`.
+3. Confirm the generated script is created under `Assets/Scripts/` when missing.
 4. Wait for Unity compilation to finish.
-5. Confirm a `NewConstructorAsset` GameObject is created and selected.
-6. Confirm it has `MeshRenderer`, `MeshFilter`, `MeshCollider`, and the generated `Constructor` component.
-7. Confirm the `SplitOne` and `SplitHalf` interactables are present.
-8. Repeat for Multi Constructor and DynamicThing Constructor.
-9. Delete the generated script and repeat to verify script regeneration still works.
+5. Confirm a GameObject is created and selected.
+6. Confirm it has `MeshRenderer`, `MeshFilter`, `MeshCollider`, and the generated component.
+7. Confirm only Constructor/MultiConstructor/DynamicThingConstructor receive the stackable interactables.
+8. Confirm Frame and Wall do not receive those interactables unless their constructor class explicitly adds them.
+9. Delete a generated script and repeat to verify script regeneration still works.
 10. Force a domain reload during compilation and confirm the pending request still completes.

@@ -1,5 +1,4 @@
 using System;
-using Assets.Scripts.Objects;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,7 +12,7 @@ namespace ilodev.stationeersmods.tools.assetsfactory
         [Serializable]
         private sealed class PendingRequest
         {
-            public string DefinitionId;
+            public string ConstructorTypeName;
             public string NamespaceName;
             public string AssemblyName;
         }
@@ -26,11 +25,11 @@ namespace ilodev.stationeersmods.tools.assetsfactory
             }
         }
 
-        public static void CreateAsset(StationeersAssetDefinition definition)
+        public static void CreateAsset(IStationeersAssetConstructor constructor)
         {
-            if (definition == null)
+            if (constructor == null)
             {
-                Debug.LogError("Cannot create Stationeers asset: definition is null.");
+                Debug.LogError("Cannot create Stationeers asset: constructor is null.");
                 return;
             }
 
@@ -39,27 +38,27 @@ namespace ilodev.stationeersmods.tools.assetsfactory
 
             SavePendingRequest(new PendingRequest
             {
-                DefinitionId = definition.Id,
+                ConstructorTypeName = constructor.GetType().AssemblyQualifiedName,
                 NamespaceName = namespaceName,
                 AssemblyName = assemblyName
             });
 
-            if (TypeUtils.NamespaceComponentExists(namespaceName, definition.GeneratedClassName))
+            if (TypeUtils.NamespaceComponentExists(namespaceName, constructor.GeneratedClassName))
             {
                 Debug.Log(
-                    $"Component already exists, continuing asset creation: {namespaceName}.{definition.GeneratedClassName}");
+                    $"Component already exists, continuing asset creation: {namespaceName}.{constructor.GeneratedClassName}");
 
                 TryCompletePendingRequest();
                 return;
             }
 
             string content = FileUtils.GenerateScript(
-                definition.GeneratedClassName,
-                definition.BaseClassName,
-                definition.AddComponentMenuPath,
+                constructor.GeneratedClassName,
+                constructor.BaseClassName,
+                constructor.AddComponentMenuPath,
                 namespaceName);
 
-            FileUtils.CreateTextFile(definition.ScriptPath, content, true);
+            FileUtils.CreateTextFile(constructor.ScriptPath, content, true);
 
             SubscribeToEditorUpdate();
         }
@@ -105,15 +104,9 @@ namespace ilodev.stationeersmods.tools.assetsfactory
                 return;
             }
 
-            StationeersAssetDefinition definition =
-                StationeersAssetDefinitions.FindById(request.DefinitionId);
-
-            if (definition == null)
+            IStationeersAssetConstructor constructor = CreateConstructorFromPendingRequest(request);
+            if (constructor == null)
             {
-                Debug.LogError(
-                    "Cannot complete Stationeers asset creation. Unknown definition id: " +
-                    request.DefinitionId);
-
                 ClearPendingRequest();
                 EditorApplication.update -= TryCompletePendingRequest;
                 return;
@@ -121,59 +114,67 @@ namespace ilodev.stationeersmods.tools.assetsfactory
 
             Type generatedType = StationeersTypeResolver.ResolveComponentType(
                 request.NamespaceName,
-                definition.GeneratedClassName,
+                constructor.GeneratedClassName,
                 request.AssemblyName);
 
             if (generatedType == null)
             {
                 Debug.LogWarning(
                     "Waiting for generated Stationeers component type: " +
-                    definition.GeneratedClassName);
+                    constructor.GeneratedClassName);
 
                 return;
             }
 
-            GameObject gameObject = CreateConfiguredGameObject(definition, generatedType);
+            GameObject gameObject = CreateConfiguredGameObject(constructor, generatedType);
             Selection.activeObject = gameObject;
 
             ClearPendingRequest();
             EditorApplication.update -= TryCompletePendingRequest;
         }
 
+        private static IStationeersAssetConstructor CreateConstructorFromPendingRequest(PendingRequest request)
+        {
+            Type constructorType = Type.GetType(request.ConstructorTypeName);
+
+            if (constructorType == null)
+            {
+                Debug.LogError(
+                    "Cannot complete Stationeers asset creation. Constructor type was not found: " +
+                    request.ConstructorTypeName);
+                return null;
+            }
+
+            if (!typeof(IStationeersAssetConstructor).IsAssignableFrom(constructorType))
+            {
+                Debug.LogError(
+                    "Cannot complete Stationeers asset creation. Type is not an asset constructor: " +
+                    constructorType.FullName);
+                return null;
+            }
+
+            try
+            {
+                return (IStationeersAssetConstructor)Activator.CreateInstance(constructorType);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                return null;
+            }
+        }
+
         private static GameObject CreateConfiguredGameObject(
-            StationeersAssetDefinition definition,
+            IStationeersAssetConstructor constructor,
             Type generatedType)
         {
-            GameObject gameObject = new GameObject(definition.DefaultGameObjectName);
-            Undo.RegisterCreatedObjectUndo(gameObject, "Create " + definition.DefaultGameObjectName);
+            GameObject gameObject = new GameObject(constructor.DefaultGameObjectName);
+            Undo.RegisterCreatedObjectUndo(gameObject, "Create " + constructor.DefaultGameObjectName);
 
-            gameObject.AddComponent<MeshRenderer>();
-            gameObject.AddComponent<MeshFilter>();
-            gameObject.AddComponent<MeshCollider>();
-            gameObject.AddComponent(generatedType);
-
-            if (definition.AddDefaultStackableInteractables)
-            {
-                AddDefaultStackableInteractables(gameObject);
-            }
+            constructor.ConfigureGameObject(gameObject, generatedType);
 
             EditorUtility.SetDirty(gameObject);
             return gameObject;
-        }
-
-        private static void AddDefaultStackableInteractables(GameObject gameObject)
-        {
-            Thing thing = gameObject.GetComponent<Thing>();
-            if (thing == null)
-            {
-                Debug.LogWarning(
-                    "Created asset does not have a Thing component. Default interactables were not added.");
-
-                return;
-            }
-
-            InteractableHelpers.AddInteractable(thing, "SplitOne", InteractableType.Button1);
-            InteractableHelpers.AddInteractable(thing, "SplitHalf", InteractableType.Button2);
         }
     }
 }
