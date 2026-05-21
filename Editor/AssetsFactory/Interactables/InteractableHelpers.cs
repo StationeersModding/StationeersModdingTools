@@ -1,8 +1,5 @@
 using Assets.Scripts.Objects;
 using Assets.Scripts.Util;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,27 +7,44 @@ namespace ilodev.stationeersmods.tools.assetsfactory
 {
     public static class InteractableHelpers
     {
-
         /// <summary>
-        /// Add interactable
+        /// Adds an interactable to a Thing and marks it dirty for Unity serialization.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="action"></param>
-        public static void AddInteractable(Thing thing, string name, InteractableType action)
+        public static bool AddInteractable(Thing thing, string name, InteractableType action)
         {
-            Interactable interactable = new Interactable();
-            interactable.StringKey = name;
-            interactable.Action = action;
-            interactable.CanKeyInteract = true; // Todo: this is just temporary
+            if (thing == null)
+            {
+                Debug.LogWarning("Cannot add Stationeers interactable because the target Thing is null.");
+                return false;
+            }
+
+            if (thing.Interactables == null)
+            {
+                Debug.LogWarning("Cannot add Stationeers interactable because Thing.Interactables is null.");
+                return false;
+            }
+
+            Interactable interactable = new Interactable
+            {
+                StringKey = name,
+                Action = action,
+                CanKeyInteract = true
+            };
+
             thing.Interactables.Add(interactable);
             EditorUtility.SetDirty(thing);
+            return true;
         }
 
-        public static void AddInteractable(GameObject go, string name, InteractableType action)
+        public static bool AddInteractable(GameObject gameObject, string name, InteractableType action)
         {
-            Thing thing = go.GetComponent<Thing>();
-            AddInteractable (thing, name, action);  
-        }
+            if (gameObject == null)
+            {
+                Debug.LogWarning("Cannot add Stationeers interactable because the target GameObject is null.");
+                return false;
+            }
 
+            return AddInteractable(gameObject.GetComponent<Thing>(), name, action);
+        }
     }
 }
