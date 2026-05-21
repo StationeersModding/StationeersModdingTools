@@ -71,11 +71,31 @@ namespace ilodev.stationeersmods.tools.assetsfactory
             "Stationeers/Objects/DynamicThingConstructor",
             CreatedScriptsPath + "Objects/DynamicThingConstructor.cs");
 
+        public static readonly StationeersAssetDefinition Frame = new StationeersAssetDefinition(
+            "Frame",
+            "Assets/Create/Stationeers/QuickItems/Structure Frame",
+            "NewStructureFrameAsset",
+            "Frame",
+            "Objects.Structures.Frame",
+            "Stationeers/Objects/Structures/Frame",
+            CreatedScriptsPath + "Objects/Structures/Frame.cs");
+
+        public static readonly StationeersAssetDefinition Wall = new StationeersAssetDefinition(
+            "Wall",
+            "Assets/Create/Stationeers/QuickItems/Structure Wall",
+            "NewStructureWallAsset",
+            "Wall",
+            "Assets.Scripts.Objects.Wall",
+            "Stationeers/Objects/Wall",
+            CreatedScriptsPath + "Objects/Wall.cs");
+
         public static StationeersAssetDefinition FindById(string id)
         {
             if (id == Constructor.Id) return Constructor;
             if (id == MultiConstructor.Id) return MultiConstructor;
             if (id == DynamicThingConstructor.Id) return DynamicThingConstructor;
+            if (id == Frame.Id) return Frame;
+            if (id == Wall.Id) return Wall;
             return null;
         }
     }
