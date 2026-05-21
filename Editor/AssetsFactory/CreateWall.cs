@@ -1,4 +1,5 @@
 using Assets.Scripts.Objects;
+using Assets.Scripts.Util;
 using UnityEditor;
 using UnityEngine;
 
@@ -48,6 +49,9 @@ namespace ilodev.stationeersmods.tools.assetsfactory
             structure.BuildStates = new System.Collections.Generic.List<BuildState>();
             structure.BuildStates.Add(defaultBuildState);
 
+            structure.PlacementType = PlacementSnap.Face;
+            structure.SelectionDisplay = SelectionHighlightMethod.Grid;
+            structure.StructureCollisionType = CollisionType.BlockFace;
 
             // Add sound blocker
             // TODO: Move this to a helper function
@@ -58,6 +62,9 @@ namespace ilodev.stationeersmods.tools.assetsfactory
             blockSoundCollider.center = boxCollider.center;
             blockSoundCollider.size = boxCollider.size;
 
+            // Set rotation type
+            ISmartRotatable smartRotatable = gameObject.GetComponent<ISmartRotatable>();
+            smartRotatable.SetConnectionType(SmartRotate.ConnectionType.FaceAllAll);
 
             EditorUtility.SetDirty(gameObject);
         }
