@@ -50,8 +50,6 @@ namespace ilodev.stationeers.moddingtools.diagnostics
 
             });
 
-            registry.RegisterHandler("Blueprint", BlueprintGeneratorHandler);
-
             registry.RegisterHandler("ThumbnailOffset", ThumbnailHandler);
             registry.RegisterHandler("ThumbnailRotation", ThumbnailHandler);
 
@@ -134,13 +132,6 @@ namespace ilodev.stationeers.moddingtools.diagnostics
 
                 });
             }
-        }
-
-        private void BlueprintGeneratorHandler(GenericMenu menu, SerializedProperty property, Object target)
-        {
-            Thing thing = (Thing)target;
-            Debug.Log("Blueprint generator missing");
-
         }
 
     }
