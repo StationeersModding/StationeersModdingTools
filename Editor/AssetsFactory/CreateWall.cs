@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ilodev.stationeersmods.tools.assetsfactory
 {
-    public sealed class CreateWall : StationeersAssetConstructorBase
+    public sealed class CreateWall : StationeersAssetStructureBase
     {
         public override string Id => "Wall";
         public override string DefaultGameObjectName => "NewStructureWallAsset";
@@ -27,40 +27,20 @@ namespace ilodev.stationeersmods.tools.assetsfactory
         /// <param name="generatedType"></param>
         public override void ConfigureGameObject(GameObject gameObject, System.Type generatedType)
         {
-            MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
-            MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
 
-            BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
-            boxCollider.center = new Vector3(0, 0, 0.065f);
-            boxCollider.size = new Vector3(2, 2, 0.13f);
-
-            gameObject.AddComponent(generatedType);
+            base.ConfigureGameObject(gameObject, generatedType);
+            MakeBoxCollider(gameObject, new Vector3(0, 0, 0.065f), new Vector3(2, 2, 0.13f));
 
             // Add default build state
-            // TODO: move this to a helper function
+            AddDefaultBuildState(gameObject);
+
+            // Set Placement Type
             Structure structure = gameObject.GetComponent<Structure>();
-            // Add default build state
-            BuildState defaultBuildState = new BuildState();
-            defaultBuildState.BlockAir = true;
-            defaultBuildState.BlockLight = true;
-            defaultBuildState.BlockGravity = true;
-            defaultBuildState.Visualizer = meshRenderer;
-            defaultBuildState.RenderMode = BuildStateRenderMode.OnMineAndPreviousStates;
-            structure.BuildStates = new System.Collections.Generic.List<BuildState>();
-            structure.BuildStates.Add(defaultBuildState);
-
             structure.PlacementType = PlacementSnap.Face;
             structure.SelectionDisplay = SelectionHighlightMethod.Grid;
             structure.StructureCollisionType = CollisionType.BlockFace;
 
-            // Add sound blocker
-            // TODO: Move this to a helper function
-            GameObject blockSound = new GameObject("BlockSound");
-            blockSound.transform.parent = gameObject.transform;
-            blockSound.layer = LayerMask.NameToLayer("BlockSound");
-            BoxCollider blockSoundCollider = blockSound.AddComponent<BoxCollider>();
-            blockSoundCollider.center = boxCollider.center;
-            blockSoundCollider.size = boxCollider.size;
+            CreateBlockSound(gameObject, new Vector3(0, 0, 0.065f), new Vector3(2, 2, 0.13f));
 
             // Set rotation type
             ISmartRotatable smartRotatable = gameObject.GetComponent<ISmartRotatable>();
