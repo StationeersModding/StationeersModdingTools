@@ -46,6 +46,9 @@ namespace ilodev.stationeersmods.tools.assetsfactory
             ISmartRotatable smartRotatable = gameObject.GetComponent<ISmartRotatable>();
             smartRotatable.SetConnectionType(SmartRotate.ConnectionType.FaceAllAll);
 
+            // Create or assign mesh
+            GetOrCreateMeshFromBoxCollider(gameObject, "DefaultWall");
+
             EditorUtility.SetDirty(gameObject);
         }
     }

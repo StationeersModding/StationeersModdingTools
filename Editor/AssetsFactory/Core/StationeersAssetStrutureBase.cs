@@ -35,8 +35,8 @@ namespace ilodev.stationeersmods.tools.assetsfactory
         public virtual BoxCollider MakeBoxCollider(GameObject gameObject, Vector3 center, Vector3 size)
         {
             BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
-            boxCollider.center = new Vector3(0, 0, 0.065f);
-            boxCollider.size = new Vector3(2, 2, 0.13f);
+            boxCollider.center = center;
+            boxCollider.size = size;
 
             return boxCollider;
         }
@@ -52,6 +52,19 @@ namespace ilodev.stationeersmods.tools.assetsfactory
             return blockSound;
         }
 
+
+        public virtual void GetOrCreateMeshFromBoxCollider(GameObject gameObject, string name)
+        {
+            // Create or assign mesh
+            BoxCollider collider = gameObject.GetComponent<BoxCollider>();
+
+            Mesh mesh = MeshAssetUtils.GetOrCreateMeshFromBoxCollider(
+                collider,
+                "Assets/Meshes/",
+                name);
+
+            gameObject.GetComponent<MeshFilter>().sharedMesh = mesh;
+        }
 
     }
 }

@@ -42,6 +42,9 @@ namespace ilodev.stationeersmods.tools.assetsfactory
 
             CreateBlockSound(gameObject, new Vector3(0, 0, 0), new Vector3(2, 2, 2));
 
+            // Create or assign mesh
+            GetOrCreateMeshFromBoxCollider(gameObject, "DefaultFrame");
+
             EditorUtility.SetDirty(gameObject);
         }
 
