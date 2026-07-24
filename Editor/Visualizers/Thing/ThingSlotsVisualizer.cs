@@ -1,76 +1,64 @@
-using System;
 using Assets.Scripts.Objects;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using System.Drawing;
 
-namespace ilodev.stationeersmods.tools.visualizers
+namespace stationeers.modding.tools.visualizers
 {
+    /// <summary>
+    /// Draws slot bounds and metadata labels for every slot on a <see cref="Thing"/>.
+    /// </summary>
     public class ThingSlotsVisualizer : IThingVisualizer
     {
-        public void OnSceneGUI(SceneView sceneView, UnityEngine.Object target)
-        {
-            if (!EditorPrefs.GetBool("Visualizer.Slots", true))
-                return;
+        private const string ColorPrefKey = "Visualizer.Slots.Color";
+        private static readonly Color DefaultSlotColor = new Color(0.8f, 0.8f, 0.3f, 1f);
+        private Color slotColor = VisualizerPreferencesUtil.LoadColor(ColorPrefKey, DefaultSlotColor);
 
-            Thing thing = target as Thing;
-            if (thing == null)
+        public string ToggleTitle => "Slots";
+        public string ToggleName => "Visualizer.Slots";
+        public string ToggleTooltip => "Display slot bounds and metadata.";
+        public bool ToggleState => true;
+
+        public void OnPreferencesGUI()
+        {
+            slotColor = VisualizerPreferencesUtil.ColorField("Slot Color", ColorPrefKey, slotColor, DefaultSlotColor);
+        }
+
+        public void OnSceneGUI(SceneView sceneView, Object target)
+        {
+            if (target is not Thing thing)
                 return;
 
             foreach (Slot slot in thing.Slots)
             {
-                Handles.color = new UnityEngine.Color(0.8f, 0.8f, 0.3f, 1.0f); // Purple
-                Vector3 position = Vector3.zero;
-                
-                if (slot.Location != null)
-                    position = slot.Location.position;
-
+                Vector3 position = slot.Location != null ? slot.Location.position : Vector3.zero;
                 Vector3 size = slot.Size;
-
-                // override size with collider size
-                if (slot.Collider != null && size == Vector3.zero)
-                {
-                    size = slot.Collider.bounds.size;
-                }
-
-                // No size at the end, no need to display
-                if (size == Vector3.zero)
-                    continue;
 
                 if (slot.Collider != null)
                 {
                     position = slot.Collider.bounds.center;
+                    if (size == Vector3.zero)
+                        size = slot.Collider.bounds.size;
                 }
 
+                if (size == Vector3.zero)
+                    continue;
+
+                Handles.color = slotColor;
                 if (slot.Location != null)
                 {
-                    WithHandlesMatrix(Matrix4x4.TRS(position, slot.Location.rotation, Vector3.one), () =>
-                    {
-                        Handles.DrawWireCube(Vector3.zero, size);
-                    });
+                    VisualizerDrawUtil.WithHandlesMatrix(
+                        Matrix4x4.TRS(position, slot.Location.rotation, Vector3.one),
+                        () => Handles.DrawWireCube(Vector3.zero, size));
                 }
                 else
                 {
                     Handles.DrawWireCube(position, size);
                 }
 
-                // Draw label
-                GUIStyle boldLabel = new GUIStyle(EditorStyles.label);
-                boldLabel.richText = true;
-                string text = $"<color=#FFFFFF><b>{slot.StringKey.ToString()} ({slot.Type.ToString()})</b></color>\r\n<color=#000000>{slot.Action.ToString()}</color>";
-                Handles.color = UnityEngine.Color.white;
-                Handles.Label(position, text, boldLabel);
+                VisualizerDrawUtil.DrawCenteredLabel(position,
+                    $"<color=#FFFFFF><b>{slot.StringKey} ({slot.Type})</b></color>\n" +
+                    $"<color=#000000><b>{slot.Action}</b></color>");
             }
-        }
-
-        void WithHandlesMatrix(Matrix4x4 matrix, Action drawAction)
-        {
-            var oldMatrix = Handles.matrix;
-            Handles.matrix = matrix;
-            drawAction();
-            Handles.matrix = oldMatrix;
         }
     }
 }

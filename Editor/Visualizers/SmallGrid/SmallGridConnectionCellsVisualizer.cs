@@ -1,54 +1,43 @@
+using Assets.Scripts.Objects;
 using UnityEditor;
 using UnityEngine;
-using Assets.Scripts.Objects;
 
-namespace ilodev.stationeersmods.tools.visualizers
+namespace stationeers.modding.tools.visualizers
 {
     /// <summary>
-    /// Highlights the SmallGrid Cells occupied by the OpenEnd connections
-    /// of a SmallGrid asset.
+    /// Highlights the snapped small-grid cell occupied by each configured OpenEnd.
     /// </summary>
     public class SmallGridConnectionsVisualizer : IThingVisualizer
     {
-        public void OnSceneGUI(SceneView sceneView, Object target)
+        private const string ColorPrefKey = "Visualizer.OpenEnds.ConnectionColor";
+        private const float CellSize = 0.5f;
+        private static readonly Color DefaultColor = new Color(1f, 0.5f, 0f, 1f);
+        private Color connectionColor = VisualizerPreferencesUtil.LoadColor(ColorPrefKey, DefaultColor);
+
+        public string ToggleTitle => "Open End Cells";
+        public string ToggleName => "Visualizer.OpenEndCells";
+        public string ToggleTooltip => "Highlight SmallGrid cells used by OpenEnd connections.";
+        public bool ToggleState => true;
+
+        public void OnPreferencesGUI()
         {
-            if (!EditorPrefs.GetBool("Visualizer.OpenEnds", true))
-                return;
-
-            // Only SmallGrids have OpenEnds
-            SmallGrid smallGrid = target as SmallGrid;
-            if (smallGrid == null)
-                return;
-
-            Handles.color = EditorPrefsHelper.LoadColor("Visualizers.OpenEnds.CellColor", new Color(1.0f, 0.5f, 0.0f, 1.0f));
-
-            foreach (var openEnd in smallGrid.OpenEnds)
-            {
-                if (openEnd == null || openEnd.Transform == null)
-                    continue;
-
-                Vector3 snappedPos = SnapToGrid(openEnd.Transform.position, 0.5f, 0.25f);
-                Handles.DrawWireCube(snappedPos, Vector3.one * 0.5f);
-            }
+            connectionColor = VisualizerPreferencesUtil.ColorField("OpenEnd Grid Cell Color", ColorPrefKey, connectionColor, DefaultColor);
         }
 
-        /// <summary>
-        /// Snap a world position to Grid metrics. 
-        /// TODO: This function is not using offset
-        /// TODO: Move this function to a helper
-        /// </summary>
-        /// <param name="position"></param>
-        /// <param name="gridSize"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        Vector3 SnapToGrid(Vector3 position, float gridSize, float offset)
+        public void OnSceneGUI(SceneView sceneView, Object target)
         {
-            return new Vector3(
-                Mathf.Round(position.x / gridSize) * gridSize,
-                Mathf.Round(position.y / gridSize) * gridSize,
-                Mathf.Round(position.z / gridSize) * gridSize
-            );
+            if (target is not SmallGrid smallGrid)
+                return;
 
+            Handles.color = connectionColor;
+            foreach (var openEnd in smallGrid.OpenEnds)
+            {
+                if (openEnd?.Transform == null)
+                    continue;
+
+                Vector3 position = VisualizerDrawUtil.SnapToGrid(openEnd.Transform.position, CellSize);
+                Handles.DrawWireCube(position, Vector3.one * CellSize);
+            }
         }
     }
 }

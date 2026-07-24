@@ -1,81 +1,91 @@
 using Assets.Scripts.Objects;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 
-namespace ilodev.stationeersmods.tools.visualizers
+namespace stationeers.modding.tools.visualizers
 {
     /// <summary>
-    /// Class to visualize OpenEnd connections
+    /// Draws OpenEnd markers, forward arrows, and connection metadata for a <see cref="SmallGrid"/>.
     /// </summary>
     public class SmallGridEndPointsVisualizer : IThingVisualizer
     {
+        private const string PipeColorKey = "Visualizer.OpenEnds.PipeColor";
+        private const string LiquidColorKey = "Visualizer.OpenEnds.LiquidColor";
+        private const string ChuteColorKey = "Visualizer.OpenEnds.ChuteColor";
+        private const string ElectricalColorKey = "Visualizer.OpenEnds.ElectricalColor";
+        private const string OtherColorKey = "Visualizer.OpenEnds.OtherColor";
+        private const string MarkerSizeKey = "Visualizer.OpenEnds.MarkerSize";
+        private const string ArrowSizeKey = "Visualizer.OpenEnds.ArrowSize";
+
+        private const float DefaultMarkerSize = 0.1f;
+        private const float DefaultArrowSize = 0.2f;
+
+        private static readonly Color DefaultPipeColor = Color.yellow;
+        private static readonly Color DefaultLiquidColor = Color.blue;
+        private static readonly Color DefaultChuteColor = Color.gray;
+        private static readonly Color DefaultElectricalColor = Color.red;
+        private static readonly Color DefaultOtherColor = Color.green;
+
+        private Color pipeColor = VisualizerPreferencesUtil.LoadColor(PipeColorKey, DefaultPipeColor);
+        private Color liquidColor = VisualizerPreferencesUtil.LoadColor(LiquidColorKey, DefaultLiquidColor);
+        private Color chuteColor = VisualizerPreferencesUtil.LoadColor(ChuteColorKey, DefaultChuteColor);
+        private Color electricalColor = VisualizerPreferencesUtil.LoadColor(ElectricalColorKey, DefaultElectricalColor);
+        private Color otherColor = VisualizerPreferencesUtil.LoadColor(OtherColorKey, DefaultOtherColor);
+        private float markerSize = EditorPrefs.GetFloat(MarkerSizeKey, DefaultMarkerSize);
+        private float arrowSize = EditorPrefs.GetFloat(ArrowSizeKey, DefaultArrowSize);
+
+        public string ToggleTitle => "Open Ends";
+        public string ToggleName => "Visualizer.OpenEnds";
+        public string ToggleTooltip => "Display OpenEnd direction and connection information.";
+        public bool ToggleState => true;
+
+        public void OnPreferencesGUI()
+        {
+            pipeColor = VisualizerPreferencesUtil.ColorField("Pipe Color", PipeColorKey, pipeColor, DefaultPipeColor);
+            liquidColor = VisualizerPreferencesUtil.ColorField("Liquid Pipe Color", LiquidColorKey, liquidColor, DefaultLiquidColor);
+            chuteColor = VisualizerPreferencesUtil.ColorField("Chute Color", ChuteColorKey, chuteColor, DefaultChuteColor);
+            electricalColor = VisualizerPreferencesUtil.ColorField("Power / Data Color", ElectricalColorKey, electricalColor, DefaultElectricalColor);
+            otherColor = VisualizerPreferencesUtil.ColorField("Other Network Color", OtherColorKey, otherColor, DefaultOtherColor);
+            markerSize = VisualizerPreferencesUtil.FloatField("Marker Size", MarkerSizeKey, markerSize, DefaultMarkerSize, 0.01f, 2f);
+            arrowSize = VisualizerPreferencesUtil.FloatField("Arrow Size", ArrowSizeKey, arrowSize, DefaultArrowSize, 0.01f, 4f);
+        }
+
         public void OnSceneGUI(SceneView sceneView, Object target)
         {
-            if (!EditorPrefs.GetBool("Visualizer.OpenEnds", true))
-                return;
-
-            // Only SmalGrid structures have OpenEnds
-            SmallGrid smallGrid = target as SmallGrid;
-            if (smallGrid == null)
+            if (target is not SmallGrid smallGrid)
                 return;
 
             foreach (var openEnd in smallGrid.OpenEnds)
             {
-                // If there is transform, then it is probably a misconfigured OpenEnd
-                if (openEnd == null || openEnd.Transform == null)
+                if (openEnd?.Transform == null)
                     continue;
 
-                // Set color based on endpoint type
-                Color color;
-                switch (openEnd.ConnectionType )
-                {
-                    case NetworkType.Pipe:
-                        color = Color.yellow;
-                        break;
+                Vector3 position = openEnd.Transform.position;
+                Vector3 forward = openEnd.Transform.forward;
+                Color color = GetColor(openEnd.ConnectionType);
+                color.a = 0.6f;
+                Handles.color = color;
 
-                    case NetworkType.PipeLiquid:
-                        color = Color.blue;
-                        break;
+                Handles.SphereHandleCap(0, position, Quaternion.identity, markerSize, EventType.Repaint);
+                Handles.ArrowHandleCap(0, position - forward * markerSize, Quaternion.LookRotation(forward), arrowSize, EventType.Repaint);
 
-                    case NetworkType.Chute:
-                        color = Color.gray;
-                        break;
-
-                    case NetworkType.Power:
-                    case NetworkType.Data:
-                    case NetworkType.PowerAndData:
-                        color = Color.red;
-                        break;
-
-                    // Any complex combination, or by default use Green color.
-                    default:
-                        color = Color.green;
-                        break;
-                }
-                Handles.color = new Color(color.r, color.g, color.b, 0.6f);
-
-                // TODO: Move all this drawing to the drawing util
-
-                // Make a small colored sphere
-                Handles.SphereHandleCap(0, openEnd.Transform.position, Quaternion.identity, 0.1f, EventType.Repaint);
-
-                // Draw a small colord arrow
-                Handles.ArrowHandleCap(
-                    0, 
-                    openEnd.Transform.position - openEnd.Transform.forward * 0.1f, // position at which to draw the arrow
-                    Quaternion.LookRotation(openEnd.Transform.forward), // rotation for the arrow
-                    0.2f, // size of the arrow
-                    EventType.Repaint // always Repaint for scene GUI
-                );
-
-                // Draw a label
-                Handles.color = Color.white;
-                GUIStyle boldLabel = new GUIStyle(EditorStyles.label);
-                boldLabel.richText = true;
-                string text = $"<color=#FFFFFF><b>{openEnd.ConnectionType.ToString()}</b></color>\r\n{openEnd.ConnectionRole.ToString()}";
-                Handles.Label(openEnd.Transform.position + Vector3.up * 0.1f, text, boldLabel);
+                VisualizerDrawUtil.DrawCenteredLabel(position,
+                    $"<color=#FFFFFF><b>{openEnd.ConnectionType}</b></color>\n{openEnd.ConnectionRole}");
             }
+        }
+
+        private Color GetColor(NetworkType type)
+        {
+            return type switch
+            {
+                NetworkType.Pipe => pipeColor,
+                NetworkType.PipeLiquid => liquidColor,
+                NetworkType.Chute => chuteColor,
+                NetworkType.Power => electricalColor,
+                NetworkType.Data => electricalColor,
+                NetworkType.PowerAndData => electricalColor,
+                _ => otherColor
+            };
         }
     }
 }

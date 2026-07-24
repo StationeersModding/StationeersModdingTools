@@ -2,59 +2,82 @@ using UnityEditor;
 using UnityEditor.Overlays;
 using UnityEngine.UIElements;
 
-namespace ilodev.stationeersmods.tools.visualizers
+namespace stationeers.modding.tools.visualizers
 {
     /// <summary>
-    /// Creates an overlay panel for the visualizers
+    /// SceneView overlay that lists all registered <see cref="IThingVisualizer"/> implementations
+    /// and exposes an enable/disable toggle for each.
+    /// <para>
+    /// The toggle state is persisted using <see cref="EditorPrefs"/> under each visualizer's
+    /// <see cref="IThingVisualizer.ToggleName"/> key.
+    /// </para>
+    /// <para>
+    /// If a visualizer implements preferences UI via <see cref="IThingVisualizer.OnPreferencesGUI"/>,
+    /// this overlay will render it inside a foldout below the toggle.
+    /// </para>
     /// </summary>
-    [Overlay(typeof(SceneView), "Visualizers", true)]
+    [Overlay(typeof(SceneView), "Visualizers", defaultDisplay = true)]
     public class ThingVisualizerOverlay : Overlay
     {
         /// <summary>
-        /// Creates the main visualizers panel. Calls visualizer to add new toggle options
+        /// Creates the overlay content.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The root <see cref="VisualElement"/> for the overlay.</returns>
         public override VisualElement CreatePanelContent()
         {
-            var root = new VisualElement();
-
-            // Add toggles for all the visualizer we have
-            root.Add(CreateToggle("Interactables", "Visualizer.Interactables", true, "Show the interactables data: name, type, collider, etc"));
-            root.Add(CreateToggle("Slots", "Visualizer.Slots", true, "Highlight Slot information: Name, type, shape, etc"));
-            root.Add(CreateToggle("Open Ends", "Visualizer.OpenEnds", true, "Visualize OpenEnd connection data: type, role, etc"));
-
-            root.Add(CreateToggle("Grid Bounds", "Visualizer.GridBounds", true));
-            root.Add(CreateToggle("Large Grid Bounds", "Visualizer.LargeGridBounds", true));
-            root.Add(CreateToggle("Small Grid Bounds", "Visualizer.SmallGridBounds", true));
-            root.Add(CreateToggle("Force Grid Bounds", "Visualizer.ForceGridBounds", true));
-
-            // TODO: Move Toggle definition to the visualizer, and add additional toggles provided
-            // by the visualizers here.
-            foreach(var visualizer in ThingVisualizer.GetVisualizers())
+            var root = new VisualElement
             {
+                name = "thing-visualizer-overlay-root"
+            };
+
+            root.AddToClassList("thing-visualizer-overlay");
+
+            // Build UI for each visualizer discovered by the registry.
+            foreach (var visualizer in ThingVisualizer.GetVisualizers())
+            {
+                AddVisualizerUI(root, visualizer);
             }
 
             return root;
         }
 
         /// <summary>
-        /// Creates a toggle.
+        /// Adds toggle and optional preferences UI for a single visualizer.
         /// </summary>
-        /// <param name="label"></param>
-        /// <param name="key"></param>
-        /// <param name="defaultValue"></param>
-        /// <param name="tooltip"></param>
-        /// <returns></returns>
-        VisualElement CreateToggle(string label, string key, bool defaultValue = true, string tooltip = "")
+        private static void AddVisualizerUI(VisualElement root, IThingVisualizer visualizer)
+        {
+            // Skip visualizers that don't want to appear in the overlay.
+            // (Earlier code used null; we also treat empty/whitespace as "hidden".)
+            if (string.IsNullOrWhiteSpace(visualizer.ToggleTitle))
+                return;
+
+            // Toggle row
+            var toggle = CreatePrefToggle(
+                label: visualizer.ToggleTitle,
+                key: visualizer.ToggleName,
+                defaultValue: visualizer.ToggleState,
+                tooltip: visualizer.ToggleTooltip
+            );
+
+            root.Add(toggle);
+        }
+
+        /// <summary>
+        /// Creates a UIElements toggle that persists its state to <see cref="EditorPrefs"/>.
+        /// </summary>
+        /// <param name="label">Visible label.</param>
+        /// <param name="key">EditorPrefs key for persistence.</param>
+        /// <param name="defaultValue">Default value if key does not exist.</param>
+        /// <param name="tooltip">Tooltip text.</param>
+        private static Toggle CreatePrefToggle(string label, string key, bool defaultValue, string tooltip)
         {
             var toggle = new Toggle(label)
             {
-                value = EditorPrefs.GetBool(key, defaultValue)
-
+                value = EditorPrefs.GetBool(key, defaultValue),
+                tooltip = tooltip ?? string.Empty
             };
-            toggle.tooltip = tooltip;
 
-            toggle.RegisterValueChangedCallback( evt =>
+            toggle.RegisterValueChangedCallback(evt =>
             {
                 EditorPrefs.SetBool(key, evt.newValue);
                 SceneView.RepaintAll();
@@ -62,7 +85,5 @@ namespace ilodev.stationeersmods.tools.visualizers
 
             return toggle;
         }
-
-
     }
 }

@@ -6,23 +6,23 @@ using UnityEngine;
 namespace stationeers.modding.tools.visualizers
 {
     /// <summary>
-    /// Highlights grid cells occupied by a <see cref="Structure"/>'s shaped bounds using Small Grid metrics.
+    /// Highlights grid cells occupied by a <see cref="Structure"/>'s shaped bounds using Large Grid metrics.
     /// </summary>
-    public class SmallGridBlockingVisualizer : IThingVisualizer
+    public class LargeGridBlockingVisualizer : IThingVisualizer
     {
-        private const int MaxCellsToDraw = 250;
-        private const string CellColorPrefKey = "Visualizer.SmallGridBounds.Cell";
-        private static readonly Color DefaultCellColor = new Color(1f, 0f, 0f, 0.5f);
+        private const int MaxCellsToDraw = 50;
+        private const string CellColorPrefKey = "Visualizer.LargeGridBounds.Cell";
+        private static readonly Color DefaultCellColor = new Color(1f, 1f, 1f, 0.5f);
         private Color cellColor = VisualizerPreferencesUtil.LoadColor(CellColorPrefKey, DefaultCellColor);
 
-        public string ToggleTitle => "Grid Bounds Small";
-        public string ToggleName => "Visualizer.SmallGridBounds";
-        public string ToggleTooltip => "Highlight blocked cells on the 0.5-unit grid.";
+        public string ToggleTitle => "Grid Bounds Large";
+        public string ToggleName => "Visualizer.LargeGridBounds";
+        public string ToggleTooltip => "Highlight blocked cells on the 2-unit grid.";
         public bool ToggleState => true;
 
         public void OnPreferencesGUI()
         {
-            cellColor = VisualizerPreferencesUtil.ColorField("Small Grid Cell Color", CellColorPrefKey, cellColor, DefaultCellColor);
+            cellColor = VisualizerPreferencesUtil.ColorField("Large Grid Cell Color", CellColorPrefKey, cellColor, DefaultCellColor);
         }
 
         public void OnSceneGUI(SceneView sceneView, Object target)
@@ -30,7 +30,7 @@ namespace stationeers.modding.tools.visualizers
             if (target is not Structure structure)
                 return;
 
-            float cellSize = 0.5f;
+            float cellSize = 2f;
             if (cellSize <= 0f)
                 return;
 
@@ -58,7 +58,9 @@ namespace stationeers.modding.tools.visualizers
         /// </summary>
         public static void CachePrefabBounds(Structure structure) => StructureGridUtil.CachePrefabBounds(structure);
 
-        /// <summary>Converts a world position to the nearest grid coordinate.</summary>
+        /// <summary>
+        /// Converts a world position to the nearest grid coordinate.
+        /// </summary>
         public static Vector3Int WorldToGridPosition(Vector3 worldPosition, float cellSize) =>
             StructureGridUtil.WorldToGridPosition(worldPosition, cellSize);
 

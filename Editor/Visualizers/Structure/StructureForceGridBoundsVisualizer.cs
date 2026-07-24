@@ -1,34 +1,86 @@
 using Assets.Scripts.GridSystem;
 using Assets.Scripts.Objects;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace ilodev.stationeersmods.tools.visualizers
+namespace stationeers.modding.tools.visualizers
 {
+    /// <summary>
+    /// Displays the grid cells explicitly blocked by
+    /// <see cref="Structure.ForceGridBounds"/>.
+    /// </summary>
     public class StructureForceGridBoundsVisualizer : IThingVisualizer
     {
+        private const string FaceColorPrefKey =
+            "Visualizer.ForceGridBounds.FaceColor";
+
+        private const string LineColorPrefKey =
+            "Visualizer.ForceGridBounds.LineColor";
+
+        private static readonly Color DefaultFaceColor =
+            new Color(1f, 1f, 1f, 0.05f);
+
+        private static readonly Color DefaultLineColor = Color.white;
+
+        private Color faceColor = VisualizerPreferencesUtil.LoadColor(FaceColorPrefKey, DefaultFaceColor);
+
+        private Color lineColor = VisualizerPreferencesUtil.LoadColor(LineColorPrefKey, DefaultLineColor);
+
+        public string ToggleTitle => "Grid Bounds Forced";
+
+        // Retains the preference key used by the previous implementation.
+        public string ToggleName => "Visualizer.ForceGridBounds";
+
+        public string ToggleTooltip =>
+            "Display the grid cells explicitly blocked by Structure.ForceGridBounds.";
+
+        public bool ToggleState => true;
+
+        /// <summary>
+        /// Draws settings specific to force-grid bounds.
+        /// </summary>
+        public void OnPreferencesGUI()
+        {
+            faceColor = VisualizerPreferencesUtil.ColorField(
+                "Cell Face Color",
+                FaceColorPrefKey,
+                faceColor,
+                DefaultFaceColor);
+
+            lineColor = VisualizerPreferencesUtil.ColorField(
+                "Cell Outline Color",
+                LineColorPrefKey,
+                lineColor,
+                DefaultLineColor);
+        }
+
+        /// <summary>
+        /// Draws each cell listed in <see cref="Structure.ForceGridBounds"/>.
+        /// </summary>
         public void OnSceneGUI(SceneView sceneView, Object target)
         {
-
-            if (!EditorPrefs.GetBool("Visualizer.ForceGridBounds", true))
+            if (target is not Structure structure || structure is SmallGrid)
                 return;
 
-            // SmallGrid structures ignore the force grid blocking.
-            if (target as SmallGrid != null)
+            if (structure.GridSize <= 0f || structure.ForceGridBounds == null)
                 return;
 
-            Structure structure = target as Structure;
-            if (structure == null)
-                return;
+            VisualizerDrawUtil.WithHandlesMatrix(
+                structure.transform.localToWorldMatrix,
+                () =>
+                {
+                    foreach (Grid3 gridCell in structure.ForceGridBounds)
+                    {
+                        Vector3 localCenter =
+                            gridCell.ToVector3() * structure.GridSize;
 
-            foreach(Grid3 gridCell in structure.ForceGridBounds)
-            {
-                Color face = new Color(1f, 1f, 1f, 0.05f); // cyan, semi-transparent
-                Color line = Color.white;
-                DrawingUtils.DrawSolidCube(gridCell.ToVector3(), structure.GridSize, face, line);
-            }
+                        VisualizerDrawUtil.DrawSolidCube(
+                            localCenter,
+                            structure.GridSize,
+                            faceColor,
+                            lineColor);
+                    }
+                });
         }
     }
 }
