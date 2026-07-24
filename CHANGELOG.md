@@ -6,11 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.1.4] - 2026-05-21
 
-### Additions
+### Changed
+- Updated visualizers to the latest dev version
+
+## [0.1.4] - 2026-05-21
+
+### Added
 - Added first iteration of AssetFactory for Constructor assets
 
 
 ## [0.0.1] - 2025-04-30
 
-### Additions
+### Added
 - Project basic structure.
