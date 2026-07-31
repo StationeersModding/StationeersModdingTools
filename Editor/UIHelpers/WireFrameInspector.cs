@@ -111,6 +111,7 @@ namespace ilodev.stationeers.moddingtools.uihelpers
             if (wireframe.BlueprintMeshFilter != null)
                 wireframe.BlueprintMeshFilter.sharedMesh = generator.CombinedMesh;
             wireframe.BlueprintBounds = generator.CombinedMesh.bounds;
+            wireframe.BlueprintBounds.center = Vector3.zero; // Center is not used by the game.
         }
 
         /// <summary>
@@ -123,6 +124,7 @@ namespace ilodev.stationeers.moddingtools.uihelpers
             WireframeGenerator generator = new WireframeGenerator(target);
             wireframe.WireframeEdges = generator.Edges;
             wireframe.BlueprintBounds = generator.CombinedMesh.bounds;
+            wireframe.BlueprintBounds.center = Vector3.zero; // Center is not used by the game.
         }
 
         /// <summary>
