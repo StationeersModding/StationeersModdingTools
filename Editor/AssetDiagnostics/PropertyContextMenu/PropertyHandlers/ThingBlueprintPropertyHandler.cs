@@ -89,7 +89,7 @@ namespace ilodev.stationeersmodding.tools.diagnostics
                 return null;
             }
 
-            wireframe.BlueprintTransform = thing.transform;
+            wireframe.BlueprintTransform = blueprintGO.transform;
             wireframe.BlueprintMeshFilter = filter;
             wireframe.BlueprintRenderer = renderer;
 
