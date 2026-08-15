@@ -104,7 +104,7 @@ namespace ilodev.stationeersmodding.tools.diagnostics
             slot.Type = Slot.Class.None;
             slot.StringKey = "";
             slot.StringHash = 0;
-            slot.SpecificTypePrefabHash = 0;
+            slot.SpecificTypePrefabHashes = Array.Empty<int>();
             slot.ScaleMultiplier = 0;
             slot.EntityControlMode = Assets.Scripts.MovementController.Mode.Animation;
             slot.UseInternalAtmosphere = false;
@@ -128,7 +128,7 @@ namespace ilodev.stationeersmodding.tools.diagnostics
             slot.Type = slotType;
             slot.StringKey = slotType.ToString();
             slot.StringHash = Animator.StringToHash(slotType.ToString());
-            slot.SpecificTypePrefabHash = -1;
+            slot.SpecificTypePrefabHashes = Array.Empty<int>();
             slot.ScaleMultiplier = 1;
             slot.EntityControlMode = Assets.Scripts.MovementController.Mode.Seated;
             slot.IsInteractable = true;
