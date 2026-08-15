@@ -4,6 +4,11 @@ All notable changes to the Stationeers Modding Tools package will be listed here
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2026-08-16
+
+### Changed
+- Updated to the new assemblies post power pylons update to fix some minor editor bugs.
+
 ## [0.1.6] - 2026-07-31
 
 ### Changed
